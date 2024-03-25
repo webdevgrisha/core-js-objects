@@ -386,33 +386,173 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+class Selector {
+  constructor() {
+    this.selectors = {
+      element: null,
+      id: null,
+      class: [],
+      attr: [],
+      pseudoClass: [],
+      pseudoElement: null,
+    };
+
+    this.selectorsCombine = '';
+  }
+
+  element(value) {
+    this.consistencyCheck('element');
+    this.checkingForDuplicates('element');
+
+    this.selectors.element = value;
+    return this;
+  }
+
+  id(value) {
+    this.consistencyCheck('id');
+    this.checkingForDuplicates('id');
+
+    this.selectors.id = `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    this.consistencyCheck('class');
+
+    this.selectors.class.push(`.${value}`);
+    return this;
+  }
+
+  attr(value) {
+    this.consistencyCheck('attr');
+
+    this.selectors.attr.push(`[${value}]`);
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.consistencyCheck('pseudoClass');
+
+    this.selectors.pseudoClass.push(`:${value}`);
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.consistencyCheck('pseudoElement');
+    this.checkingForDuplicates('pseudoElement');
+
+    this.selectors.pseudoElement = `::${value}`;
+    return this;
+  }
+
+  stringify() {
+    if (this.selectorsCombine) return this.selectorsCombine;
+
+    let resultStr = '';
+    const allElemSelectors = Object.values(this.selectors);
+
+    allElemSelectors.forEach((selector) => {
+      if (!selector) return;
+
+      if (typeof selector === 'object' && selector.length) {
+        selector.forEach((elem) => {
+          resultStr += elem;
+        });
+      } else {
+        resultStr += selector;
+      }
+    });
+
+    return resultStr;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selectorsCombine = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+
+    return this;
+  }
+
+  checkingForDuplicates(selectorName) {
+    if (this.selectors[selectorName]) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+  }
+
+  consistencyCheck(selectorName) {
+    const selectorNames = Object.keys(this.selectors);
+    const checkIndex = selectorNames.findIndex(
+      (selector) => selector === selectorName
+    );
+
+    const checkSelectors = selectorNames.filter(
+      (selecor, index) => index > checkIndex
+    );
+
+    checkSelectors.forEach((key) => {
+      if (this.selectors[key]?.length && this.selectors[key]) {
+        throw new Error(
+          'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+        );
+      }
+    });
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const selector = new Selector();
+
+    selector.element(value);
+
+    return selector;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const selector = new Selector();
+
+    selector.id(value);
+
+    return selector;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const selector = new Selector();
+
+    selector.class(value);
+
+    return selector;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const selector = new Selector();
+
+    selector.attr(value);
+
+    return selector;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const selector = new Selector();
+
+    selector.pseudoClass(value);
+
+    return selector;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const selector = new Selector();
+
+    selector.pseudoElement(value);
+
+    return selector;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const selctorCombine = new Selector();
+
+    return selctorCombine.combine(selector1, combinator, selector2);
   },
 };
 
